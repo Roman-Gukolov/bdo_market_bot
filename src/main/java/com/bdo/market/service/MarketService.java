@@ -2,8 +2,8 @@ package com.bdo.market.service;
 
 import com.bdo.market.Constants;
 import com.bdo.market.client.MarketApi;
-import com.bdo.market.dto.*;
 import com.bdo.market.service.parser.MarketApiParser;
+import com.bdo.model.market.*;
 import com.google.common.collect.Lists;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,4 +1,4 @@
-package com.bdo.telegram.dto;
+package com.bdo.model.telegram;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;

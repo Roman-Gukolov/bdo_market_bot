@@ -1,11 +1,11 @@
 package com.bdo.market.client;
 
 import com.bdo.market.Constants;
-import com.bdo.market.dto.DetailListItem;
-import com.bdo.market.dto.Parameters;
-import com.bdo.market.dto.ServiceError;
-import com.bdo.market.dto.MarketResponse;
-import com.bdo.market.dto.MarketApiResponse;
+import com.bdo.model.market.DetailListItem;
+import com.bdo.model.market.Parameters;
+import com.bdo.model.market.ServiceError;
+import com.bdo.model.market.MarketResponse;
+import com.bdo.model.market.MarketApiResponse;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;

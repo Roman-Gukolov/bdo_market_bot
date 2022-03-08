@@ -13,7 +13,7 @@
             <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %X{REQUEST_ID} - %msg%n</pattern>
         </encoder>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${catalina.base}/logs/bdoMarketBot%d{dd-MM-yyyy}.log</fileNamePattern>
+            <fileNamePattern>logs/bdoMarketBot%d{dd-MM-yyyy}.log</fileNamePattern>
             <maxHistory>100</maxHistory>
             <totalSizeCap>1000MB</totalSizeCap>
         </rollingPolicy>

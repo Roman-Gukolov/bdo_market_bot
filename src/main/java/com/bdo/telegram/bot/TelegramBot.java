@@ -1,6 +1,6 @@
 package com.bdo.telegram.bot;
 
-import com.bdo.telegram.dto.CallbackQueryResult;
+import com.bdo.model.telegram.CallbackQueryResult;
 import com.bdo.telegram.service.BotService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -69,7 +69,7 @@ public class TelegramBot extends TelegramLongPollingBot {
             switch (requestMessage.getText()) {
                 case START: {
                     start(requestMessage.getChatId());
-                    botService.addUser(requestMessage.getFrom().getId(), requestMessage.getChatId(),
+                    botService.addUser(requestMessage.getChatId(),
                             getUserName(requestMessage.getFrom()));
                     break;
                 }
@@ -101,8 +101,7 @@ public class TelegramBot extends TelegramLongPollingBot {
             }
 
             String user = getUserName(requestMessage.getFrom());
-            botService.logUserMessage(requestMessage.getChatId(), user,
-                    requestMessage.getText(), requestMessage.getFrom().getId());
+            botService.logUserMessage(requestMessage.getChatId(), user, requestMessage.getText());
         } else if (request.hasCallbackQuery()) {
             log.info("new button action: data[{}], callback user[{}]",
                     request.getCallbackQuery().getData(), request.getCallbackQuery().getFrom().toString());

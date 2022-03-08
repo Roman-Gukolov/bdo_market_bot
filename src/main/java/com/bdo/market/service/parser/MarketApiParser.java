@@ -1,7 +1,7 @@
 package com.bdo.market.service.parser;
 
-import com.bdo.market.dto.MarketApiResponse;
-import com.bdo.market.dto.WaitListItem;
+import com.bdo.model.market.MarketApiResponse;
+import com.bdo.model.market.WaitListItem;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.CollectionUtils;
 

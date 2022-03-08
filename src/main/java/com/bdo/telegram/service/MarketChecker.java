@@ -1,11 +1,11 @@
 package com.bdo.telegram.service;
 
-import com.bdo.db.dto.OnChangePriceSub;
-import com.bdo.db.dto.WaitListSub;
-import com.bdo.db.repository.ISubsRepository;
-import com.bdo.db.repository.SubsRepository;
-import com.bdo.market.dto.PriceRestriction;
-import com.bdo.market.dto.WaitListItem;
+import com.bdo.model.db.ChangePrice;
+import com.bdo.model.db.WaitList;
+import com.bdo.repository.ChangePriceRepository;
+import com.bdo.repository.WaitListRepository;
+import com.bdo.model.market.PriceRestriction;
+import com.bdo.model.market.WaitListItem;
 import com.bdo.market.service.MarketService;
 import com.bdo.telegram.bot.TelegramBot;
 import lombok.NoArgsConstructor;
@@ -25,7 +25,8 @@ import java.util.stream.Collectors;
 @Slf4j
 public class MarketChecker {
 
-    private ISubsRepository repository;
+    private WaitListRepository waitListRepository;
+    private ChangePriceRepository changePriceRepository;
     private MarketService marketService;
     private TelegramBot tgBot;
 
@@ -43,10 +44,12 @@ public class MarketChecker {
                                                      + "Новая цена: %s;%n";
 
     @Autowired
-    public MarketChecker(SubsRepository repository,
+    public MarketChecker(WaitListRepository waitListRepository,
+                         ChangePriceRepository changePriceRepository,
                          MarketService marketService,
                          TelegramBot tgBot) {
-        this.repository = repository;
+        this.waitListRepository = waitListRepository;
+        this.changePriceRepository = changePriceRepository;
         this.marketService = marketService;
         this.tgBot = tgBot;
     }
@@ -64,13 +67,13 @@ public class MarketChecker {
                 continue;
             }
 
-            List<WaitListSub> subscribers = repository.getSubscribersWaitList(
-                    new WaitListSub(item.getItemId(), item.getEnhancement()));
+            List<WaitList> subscribers = waitListRepository.findByItemIdAndEnhancement(
+                    item.getItemId(), item.getEnhancement());
             if (CollectionUtils.isEmpty(subscribers)) {
                 continue;
             }
 
-            for (WaitListSub subscriber : subscribers) {
+            for (WaitList subscriber : subscribers) {
                 String text = String.format(WAIT_LIST_INFO, item.getItemName(), item.getEnhancement(),
                         dateFormat.format(new Date(item.getTime() * 1000)));
                 tgBot.notify(subscriber.getChatId(), text);
@@ -88,12 +91,12 @@ public class MarketChecker {
     @Scheduled(fixedRate = 15000)
     @Async
     public void notifyOnChangePrice() {
-        List<OnChangePriceSub> subscriptions = repository.getSubscriptionsOnChangePrice();
+        List<ChangePrice> subscriptions = changePriceRepository.findAll();
         if (CollectionUtils.isEmpty(subscriptions)) {
             return;
         }
 
-        for (OnChangePriceSub subscription : subscriptions) {
+        for (ChangePrice subscription : subscriptions) {
             PriceRestriction priceRestriction =
                     marketService.getPriceRestrictions(subscription.getItemId(), subscription.getEnhancement());
             if (priceRestriction == null) {
@@ -101,20 +104,20 @@ public class MarketChecker {
             }
 
             if (priceRestriction.getMaxPrice() != subscription.getMaxPrice()) {
-                List<OnChangePriceSub> subscribers = repository.getSubscribersOnChangePrice(
-                        new OnChangePriceSub(subscription.getItemId(), subscription.getEnhancement()));
+                List<ChangePrice> subscribers = changePriceRepository
+                        .findByItemIdAndEnhancement(subscription.getItemId(), subscription.getEnhancement());
                 if (CollectionUtils.isEmpty(subscribers)) {
                     return;
                 }
 
-                for (OnChangePriceSub sub : subscribers) {
+                for (ChangePrice sub : subscribers) {
                     String text = String.format(ON_CHANGE_PRICE_INFO,
                             marketService.getItemNameById(subscription.getItemId()),
                             subscription.getEnhancement(), subscription.getMaxPrice(), priceRestriction.getMaxPrice());
 
                     tgBot.notify(sub.getChatId(), text);
-                    repository.updatePrice(new OnChangePriceSub(subscription.getItemId(), subscription.getEnhancement(),
-                            priceRestriction.getMaxPrice(), sub.getChatId()));
+                    changePriceRepository.updateMaxPrice(priceRestriction.getMaxPrice(), subscription.getItemId(),
+                            subscription.getEnhancement(), sub.getChatId());
                 }
             }
         }

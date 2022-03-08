@@ -1,16 +1,22 @@
 package com.bdo.telegram.service;
 
-import com.bdo.db.dto.OnChangePriceSub;
-import com.bdo.db.dto.WaitListSub;
-import com.bdo.db.repository.ISubsRepository;
-import com.bdo.db.repository.SubsRepository;
+import com.bdo.model.db.ChangePrice;
+import com.bdo.model.db.Log;
+import com.bdo.model.db.User;
+import com.bdo.model.db.WaitList;
 import com.bdo.market.Constants;
-import com.bdo.market.dto.*;
 import com.bdo.market.service.MarketService;
-import com.bdo.telegram.dto.AllowedNotifyItem;
-import com.bdo.telegram.dto.ButtonAction;
-import com.bdo.telegram.dto.ButtonCallbackData;
-import com.bdo.telegram.dto.CallbackQueryResult;
+import com.bdo.model.market.DetailListItem;
+import com.bdo.model.market.PriceRestriction;
+import com.bdo.model.market.SearchItemInfo;
+import com.bdo.repository.ChangePriceRepository;
+import com.bdo.repository.LogRepository;
+import com.bdo.repository.UserRepository;
+import com.bdo.repository.WaitListRepository;
+import com.bdo.model.telegram.AllowedNotifyItem;
+import com.bdo.model.telegram.ButtonAction;
+import com.bdo.model.telegram.ButtonCallbackData;
+import com.bdo.model.telegram.CallbackQueryResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,7 +46,10 @@ import java.util.List;
 @Slf4j
 public class BotService {
 
-    private ISubsRepository repository;
+    private WaitListRepository waitListRepository;
+    private ChangePriceRepository changePriceRepository;
+    private LogRepository logRepository;
+    private UserRepository userRepository;
     private MarketService marketService;
     private AllowedNotifyItem[] dictionary;
     private ObjectMapper mapper;
@@ -65,11 +74,16 @@ public class BotService {
     private final static String SEARCH_FORMAT = "Название предмета: %s%n%n"
                                               + "Уведомления:";
 
-
     @Autowired
-    public BotService(SubsRepository repository,
+    public BotService(WaitListRepository waitListRepository,
+                      ChangePriceRepository changePriceRepository,
+                      LogRepository logRepository,
+                      UserRepository userRepository,
                       MarketService marketService) {
-        this.repository = repository;
+        this.waitListRepository = waitListRepository;
+        this.changePriceRepository = changePriceRepository;
+        this.logRepository = logRepository;
+        this.userRepository = userRepository;
         this.marketService = marketService;
     }
 
@@ -142,30 +156,30 @@ public class BotService {
         SendMessage message = new SendMessage();
         message.setChatId(String.valueOf(chatId));
 
-        List<WaitListSub> waitListSubs = repository.getSubscriptionsWaitList(new WaitListSub(chatId));
-        List<OnChangePriceSub> onChangePriceSubs = repository.getSubscriptionsOnChangePrice(new OnChangePriceSub(chatId));
+        List<WaitList> waitLists = waitListRepository.findByChatId(chatId);
+        List<ChangePrice> changePrices = changePriceRepository.findByChatId(chatId);
 
         StringBuilder responseBuilder = new StringBuilder();
-        if (CollectionUtils.isEmpty(waitListSubs) && CollectionUtils.isEmpty(onChangePriceSubs)) {
+        if (CollectionUtils.isEmpty(waitLists) && CollectionUtils.isEmpty(changePrices)) {
             responseBuilder.append(ZERO_SUBSCRIPTIONS_FOUND);
         } else {
-            if (!CollectionUtils.isEmpty(waitListSubs)) {
+            if (!CollectionUtils.isEmpty(waitLists)) {
                 responseBuilder.append(String.format(NOTIFICATION_FORMAT, ButtonAction.S_WAIT_LIST.getValue()));
                 responseBuilder.append(NEW_LINE);
-                for (WaitListSub waitListSub : waitListSubs) {
+                for (WaitList waitList : waitLists) {
                     String itemInfo = String.format(SUBSCRIPTION_FORMAT,
-                            marketService.getItemNameById(waitListSub.getItemId()), waitListSub.getEnhancement());
+                            marketService.getItemNameById(waitList.getItemId()), waitList.getEnhancement());
                     responseBuilder.append(itemInfo);
                     responseBuilder.append(NEW_LINE);
                 }
                 responseBuilder.append(NEW_LINE);
             }
-            if (!CollectionUtils.isEmpty(onChangePriceSubs)) {
+            if (!CollectionUtils.isEmpty(changePrices)) {
                 responseBuilder.append(String.format(NOTIFICATION_FORMAT, ButtonAction.S_CHANGE_PRICE.getValue()));
                 responseBuilder.append(NEW_LINE);
-                for (OnChangePriceSub onChangePriceSub : onChangePriceSubs) {
+                for (ChangePrice changePrice : changePrices) {
                     String itemInfo = String.format(SUBSCRIPTION_FORMAT,
-                            marketService.getItemNameById(onChangePriceSub.getItemId()), onChangePriceSub.getEnhancement());
+                            marketService.getItemNameById(changePrice.getItemId()), changePrice.getEnhancement());
                     responseBuilder.append(itemInfo);
                     responseBuilder.append(NEW_LINE);
                 }
@@ -194,10 +208,10 @@ public class BotService {
             case S_WAIT_LIST_ITEM: {
                 boolean subscribed = isAlreadySubscribedWaitList(data.getItemId(), data.getEnhancement(), chatId);
                 if (!subscribed) {
-                    subscribe(new WaitListSub(data.getItemId(), data.getEnhancement(), chatId));
+                    subscribe(new WaitList(data.getItemId(), data.getEnhancement(), chatId));
                     callback.setText(SUBSCRIBE_MSG_ALERT);
                 } else {
-                    unSubscribe(new WaitListSub(data.getItemId(), data.getEnhancement(), chatId));
+                    unSubscribeWaitList(data.getItemId(), data.getEnhancement(), chatId);
                     callback.setText(UNSUBSCRIBE_MSG_ALERT);
                 }
                 break;
@@ -210,12 +224,12 @@ public class BotService {
                     if (priceRestriction == null) {
                         log.error(UNABLE_TO_SUBSCRIBE + Constants.UNEXPECTED_ERROR_OCCURRED);
                     } else {
-                        subscribe(new OnChangePriceSub(data.getItemId(), data.getEnhancement(),
+                        subscribe(new ChangePrice(data.getItemId(), data.getEnhancement(),
                                 priceRestriction.getMaxPrice(), chatId));
                         callback.setText(SUBSCRIBE_MSG_ALERT);
                     }
                 } else {
-                    unSubscribe(new OnChangePriceSub(data.getItemId(), data.getEnhancement(), chatId));
+                    unSubscribeChangePrice(data.getItemId(), data.getEnhancement(), chatId);
                     callback.setText(UNSUBSCRIBE_MSG_ALERT);
                 }
                 break;
@@ -254,12 +268,12 @@ public class BotService {
     }
 
     private boolean isAlreadySubscribedWaitList(long itemId, int enhancement, long chatId) {
-        List<WaitListSub> subs = repository.getSubscribersWaitList(new WaitListSub(itemId, enhancement));
+        List<WaitList> subs = waitListRepository.findByItemIdAndEnhancement(itemId, enhancement);
         return subs.stream().anyMatch(sub -> sub.getChatId() == chatId);
     }
 
     private boolean isAlreadySubscribedOnChangePrice(long itemId, int enhancement, long chatId) {
-        List<OnChangePriceSub> subs = repository.getSubscribersOnChangePrice(new OnChangePriceSub(itemId, enhancement));
+        List<ChangePrice> subs = changePriceRepository.findByItemIdAndEnhancement(itemId, enhancement);
         return subs.stream().anyMatch(sub -> sub.getChatId() == chatId);
     }
 
@@ -351,6 +365,35 @@ public class BotService {
         return btn;
     }
 
+    public void subscribe(WaitList item) {
+        waitListRepository.save(item);
+    }
+
+    public void unSubscribeWaitList(long itemId, int enhancement, long chatId) {
+        waitListRepository.deleteByItemIdAndEnhancementAndChatId(itemId, enhancement, chatId);
+    }
+
+    public void subscribe(ChangePrice item) {
+        changePriceRepository.save(item);
+    }
+
+    public void unSubscribeChangePrice(long itemId, int enhancement, long chatId) {
+        changePriceRepository.deleteByItemIdAndEnhancementAndChatId(itemId, enhancement, chatId);
+    }
+
+    public void unsubscribeAll(long chatId) {
+        waitListRepository.deleteAllByChatId(chatId);
+        changePriceRepository.deleteAllByChatId(chatId);
+    }
+
+    public void addUser(long chatId, String userName) {
+        userRepository.save(new User(chatId, userName));
+    }
+
+    public void logUserMessage(long chatId, String userName, String message) {
+        logRepository.save(new Log(chatId, userName, message));
+    }
+
     private void splitMessage(String chatId, String msgText, List<SendMessage> response) {
         if (msgText.length() > MAX_TEXT_LENGTH) {
             String text = msgText.substring(0, MAX_TEXT_LENGTH);
@@ -360,33 +403,5 @@ public class BotService {
         } else {
             response.add(new SendMessage(chatId, msgText));
         }
-    }
-
-    public void subscribe(WaitListSub item) {
-        repository.subscribeWaitList(item);
-    }
-
-    public void unSubscribe(WaitListSub item) {
-        repository.unsubscribeWaitList(item);
-    }
-
-    public void subscribe(OnChangePriceSub item) {
-        repository.subscribeOnChangePrice(item);
-    }
-
-    public void unSubscribe(OnChangePriceSub item) {
-        repository.unsubscribeOnChangePrice(item);
-    }
-
-    public void unsubscribeAll(long chatId) {
-        repository.unsubscribeAll(chatId);
-    }
-
-    public void addUser(long userId, long chatId, String userName) {
-        repository.addUser(userId, chatId, userName);
-    }
-
-    public void logUserMessage(long chatId, String userName, String message, long userId) {
-        repository.logUserMessage(chatId, userName, message, userId);
     }
 }
