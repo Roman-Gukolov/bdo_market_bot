@@ -10,9 +10,6 @@ import java.util.List;
 
 public interface ChangePriceRepository extends JpaRepository<ChangePrice, Long> {
 
-    @Query("select price from ChangePrice price group by price.itemId")
-    List<ChangePrice> findWithGroupBy();
-
     @Query("select price from ChangePrice price where price.itemId=:itemId and price.enhancement=:enhancement")
     List<ChangePrice> findByItemIdAndEnhancement(long itemId, int enhancement);
 
