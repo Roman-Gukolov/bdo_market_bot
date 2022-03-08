@@ -42,6 +42,7 @@ public class MarketApi {
     private final String cookie;
 
     private static final String COMMON_ERROR = "Error receiving data from the Central auction.";
+    private static final String UNEXPECTED_ERROR_OCCURRED = "An unexpected error has occurred.";
     private static final String GET_TRADE_MARKET_WAIT_LIST = "Trademarket/GetWorldMarketWaitList";
     private static final String GET_HOME_MARKET_SUB_LIST = "Home/GetWorldMarketSubList";
     private static final String GET_ITEM_SELL_BUY_INFO = "Home/GetItemSellBuyInfo";
@@ -77,7 +78,7 @@ public class MarketApi {
             this.post(marketResponse, post);
         } catch (Exception e) {
             log.error(COMMON_ERROR, e);
-            return marketResponse.setServiceError(new ServiceError(Constants.UNEXPECTED_ERROR_OCCURRED));
+            return marketResponse.setServiceError(new ServiceError(UNEXPECTED_ERROR_OCCURRED));
         }
         return marketResponse;
     }
@@ -99,14 +100,14 @@ public class MarketApi {
             this.post(marketResponse, post);
         } catch (Exception e) {
             log.error(COMMON_ERROR, e);
-            return marketResponse.setServiceError(new ServiceError(Constants.UNEXPECTED_ERROR_OCCURRED));
+            return marketResponse.setServiceError(new ServiceError(UNEXPECTED_ERROR_OCCURRED));
         }
         return marketResponse;
     }
 
     public MarketResponse<MarketApiResponse> getPriceRestrictions(DetailListItem item) {
         String getSellInfoURL = marketURL + GET_ITEM_SELL_BUY_INFO;
-        log.info("getting item info [id:{}]: {}", item.getMainKey(), getSellInfoURL);
+        log.info("getting item info [id:{}, enhancement:{}]: {}", item.getMainKey(), item.getSubKey(), getSellInfoURL);
         MarketResponse<MarketApiResponse> marketResponse = new MarketResponse<>();
         try {
             URI uri = new URIBuilder(getSellInfoURL).build();
@@ -126,7 +127,7 @@ public class MarketApi {
             this.post(marketResponse, post);
         } catch (Exception e) {
             log.error(COMMON_ERROR, e);
-            return marketResponse.setServiceError(new ServiceError(Constants.UNEXPECTED_ERROR_OCCURRED));
+            return marketResponse.setServiceError(new ServiceError(UNEXPECTED_ERROR_OCCURRED));
         }
         return marketResponse;
     }
@@ -149,7 +150,7 @@ public class MarketApi {
             this.post(marketResponse, post);
         } catch (Exception e) {
             log.error(COMMON_ERROR, e);
-            return marketResponse.setServiceError(new ServiceError(Constants.UNEXPECTED_ERROR_OCCURRED));
+            return marketResponse.setServiceError(new ServiceError(UNEXPECTED_ERROR_OCCURRED));
         }
         return marketResponse;
     }

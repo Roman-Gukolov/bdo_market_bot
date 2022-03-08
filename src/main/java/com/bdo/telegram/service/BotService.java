@@ -65,7 +65,8 @@ public class BotService {
     private static final String FIND_ITEM_TOO_LONG_ITEMS = "Ничего не найдено. Введите точное название предмета.";
     private static final String SUBSCRIBE_MSG_ALERT = "Вы подписались на уведомления.";
     private static final String UNSUBSCRIBE_MSG_ALERT = "Вы отписались от уведомлений.";
-    private static final String UNABLE_TO_SUBSCRIBE = "Невозможно подписаться на уведомления: ";
+    private static final String UNABLE_TO_SUBSCRIBE = "Невозможно подписаться на уведомления: "
+                                                    + "Не удалось получить данные с Центрального аукциона.";
     private static final String ZERO_SUBSCRIPTIONS_FOUND = "Вы не подписаны на уведомления.";
 
     private static final String MULTIPLE_ITEMS_FOUND = "Найдено несколько предметов. Для поиска конкретного предмета "
@@ -222,7 +223,7 @@ public class BotService {
                     PriceRestriction priceRestriction =
                             marketService.getPriceRestrictions(data.getItemId(), data.getEnhancement());
                     if (priceRestriction == null) {
-                        log.error(UNABLE_TO_SUBSCRIBE + Constants.UNEXPECTED_ERROR_OCCURRED);
+                        log.error(UNABLE_TO_SUBSCRIBE);
                     } else {
                         subscribe(new ChangePrice(data.getItemId(), data.getEnhancement(),
                                 priceRestriction.getMaxPrice(), chatId));

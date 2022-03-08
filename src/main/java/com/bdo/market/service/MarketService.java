@@ -22,6 +22,7 @@ public class MarketService {
 
     private MarketApi marketApi;
 
+    private static final String EMPTY_WAIT_LIST_HAS_BEEN_RETURNED = "Empty wait list has been returned";
     private static final String TRADE_MARKET_NOT_FOUND_ERROR_OCCURRED = "Не удалось получить данные о предмете " +
             "с Центрального аукциона.";
     private static final List<String> matchingNames = Lists.newArrayList("Меч Черной звезды",
@@ -40,7 +41,7 @@ public class MarketService {
         }
         List<WaitListItem> waitListItems =  MarketApiParser.parseWaitListResponse(waitList.getData());
         if (CollectionUtils.isEmpty(waitListItems)) {
-            log.error(Constants.EMPTY_SEARCH_RESULT);
+            log.error(EMPTY_WAIT_LIST_HAS_BEEN_RETURNED);
             return Collections.emptyList();
         }
         mapItemNames(waitListItems);

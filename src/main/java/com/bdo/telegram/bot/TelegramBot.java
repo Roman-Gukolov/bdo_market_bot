@@ -36,7 +36,8 @@ public class TelegramBot extends TelegramLongPollingBot {
     private static final String START = "/start";
     private static final String DONATE = "Поддержать разработчика";
     private static final String UNSUBSCRIBE_ALL_MSG = "Вы отписались от всех уведомлений";
-    private static final String START_BTN_MSG = "Введите название предмета для поиска на центральном аукционе.";
+    private static final String START_BTN_MSG = "Введите название предмета для поиска на центральном аукционе, "
+                                              + "например \"Коса Черной звезды\"";
     private static final String MENU_BTN_TEXT = "Меню";
     private static final String CHAT_NOT_FOUND_ERROR = "Bad Request: chat not found";
 
