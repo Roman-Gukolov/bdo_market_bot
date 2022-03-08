@@ -19,7 +19,7 @@ import java.net.URL;
 public class PingTask {
     private final static String PING_URL = "https://www.google.com";
 
-    @Scheduled(fixedRate = 1200000)
+    @Scheduled(fixedRate = 300000)
     @Async
     @SneakyThrows
     public void ping() {
