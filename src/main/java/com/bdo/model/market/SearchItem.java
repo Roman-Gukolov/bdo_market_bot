@@ -1,4 +1,4 @@
-package com.bdo.market.dto;
+package com.bdo.model.market;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;

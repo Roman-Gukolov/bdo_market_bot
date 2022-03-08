@@ -1,13 +1,13 @@
-package com.bdo.market.dto;
+package com.bdo.model.telegram;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ServiceError {
-    private String errorMessage;
+public class AllowedNotifyItem {
+    private long id;
+    private int enhancement;
 }

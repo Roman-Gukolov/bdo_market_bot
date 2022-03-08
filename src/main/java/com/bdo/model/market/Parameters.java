@@ -1,4 +1,4 @@
-package com.bdo.market.dto;
+package com.bdo.model.market;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

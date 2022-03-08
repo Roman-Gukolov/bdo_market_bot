@@ -1,4 +1,4 @@
-package com.bdo.telegram.dto;
+package com.bdo.model.telegram;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
