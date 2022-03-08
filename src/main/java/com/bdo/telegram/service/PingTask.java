@@ -3,6 +3,7 @@ package com.bdo.telegram.service;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -19,6 +20,7 @@ public class PingTask {
     private final static String PING_URL = "https://www.google.com";
 
     @Scheduled(fixedRate = 1200000)
+    @Async
     @SneakyThrows
     public void ping() {
         URL url = new URL(PING_URL);

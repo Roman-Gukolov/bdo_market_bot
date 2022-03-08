@@ -11,6 +11,7 @@ import com.bdo.telegram.bot.TelegramBot;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -54,6 +55,7 @@ public class MarketChecker {
     }
 
     @Scheduled(fixedRate = 60000)
+    @Async
     public void notifyWaitList() {
         Thread.currentThread().setName("WaitListTask");
         List<WaitListItem> waitList = marketService.getWaitList();
@@ -88,6 +90,7 @@ public class MarketChecker {
     }
 
     @Scheduled(fixedRate = 15000)
+    @Async
     public void notifyOnChangePrice() {
         Thread.currentThread().setName("ChangePriceTask");
 
