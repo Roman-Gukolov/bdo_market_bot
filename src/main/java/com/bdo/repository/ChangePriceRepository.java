@@ -10,6 +10,9 @@ import java.util.List;
 
 public interface ChangePriceRepository extends JpaRepository<ChangePrice, Long> {
 
+    @Query("select distinct new ChangePrice(price.itemId, price.enhancement, price.maxPrice) from ChangePrice price")
+    List<ChangePrice> findDistinct();
+
     @Query("select price from ChangePrice price where price.itemId=:itemId and price.enhancement=:enhancement")
     List<ChangePrice> findByItemIdAndEnhancement(long itemId, int enhancement);
 

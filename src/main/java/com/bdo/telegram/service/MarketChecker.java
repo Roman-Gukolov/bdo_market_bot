@@ -94,7 +94,7 @@ public class MarketChecker {
     public void notifyOnChangePrice() {
         Thread.currentThread().setName("ChangePriceTask");
 
-        List<ChangePrice> subscriptions = changePriceRepository.findAll();
+        List<ChangePrice> subscriptions = changePriceRepository.findDistinct();
         if (CollectionUtils.isEmpty(subscriptions)) {
             return;
         }
