@@ -10,6 +10,7 @@ import com.bdo.market.service.MarketService;
 import com.bdo.telegram.bot.TelegramBot;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -85,7 +86,8 @@ public class MarketChecker {
 
     @Scheduled(fixedRate = 60000)
     public void filterOutdatedItems() {
-        notifiedItems = notifiedItems.stream().filter(item -> new Date(item.getTime() * 1000).after(new Date()))
+        notifiedItems = notifiedItems.stream()
+                .filter(item -> new Date(item.getTime() * 1000).after(DateUtils.addMinutes(new Date(), 1)))
                 .collect(Collectors.toSet());
     }
 
