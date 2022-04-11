@@ -13,7 +13,6 @@ import com.bdo.repository.ChangePriceRepository;
 import com.bdo.repository.LogRepository;
 import com.bdo.repository.UserRepository;
 import com.bdo.repository.WaitListRepository;
-import com.bdo.model.telegram.AllowedNotifyItem;
 import com.bdo.model.telegram.ButtonAction;
 import com.bdo.model.telegram.ButtonCallbackData;
 import com.bdo.model.telegram.CallbackQueryResult;
@@ -35,9 +34,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
 import javax.annotation.PostConstruct;
-import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -46,16 +43,15 @@ import java.util.List;
 @Slf4j
 public class BotService {
 
+    private static final long MIN_PRICE_FOR_WAIT_LIST = 20_000_000_000L;
     private WaitListRepository waitListRepository;
     private ChangePriceRepository changePriceRepository;
     private LogRepository logRepository;
     private UserRepository userRepository;
     private MarketService marketService;
-    private AllowedNotifyItem[] dictionary;
     private ObjectMapper mapper;
 
     private static final int MAX_TEXT_LENGTH = 4096;
-    private static final String WAIT_LIST_ALLOWED_PATH = "src/main/resources/permanent_allowed_notification_items.json";
 
     private static final String SUBSCRIBE_SIGN = "\u2796 ";
     private static final String UNSUBSCRIBE_SIGN = "\u2795 ";
@@ -92,11 +88,6 @@ public class BotService {
     private void postConstruct() {
         mapper = new ObjectMapper();
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        try {
-            dictionary = mapper.readValue(Paths.get(WAIT_LIST_ALLOWED_PATH).toFile(), AllowedNotifyItem[].class);
-        } catch (Exception e) {
-            log.error(e.getMessage());
-        }
     }
 
     public SendMessage findItem(long chatId, String name) {
@@ -257,17 +248,6 @@ public class BotService {
         editMessage.setReplyMarkup(markupInline);
     }
 
-    private boolean isNotAllowedWaitListSubscription(long itemId, int enhancement) {
-        if (dictionary == null) {
-            postConstruct();
-        }
-        if (dictionary != null) {
-            return Arrays.stream(dictionary)
-                    .noneMatch(item -> item.getId() == itemId && item.getEnhancement() == enhancement);
-        }
-        return true;
-    }
-
     private boolean isAlreadySubscribedWaitList(long itemId, int enhancement, long chatId) {
         List<WaitList> subs = waitListRepository.findByItemIdAndEnhancement(itemId, enhancement);
         return subs.stream().anyMatch(sub -> sub.getChatId() == chatId);
@@ -291,7 +271,7 @@ public class BotService {
             case S_WAIT_LIST:
             case S_WAIT_LIST_ITEM: {
                 for (DetailListItem item : items) {
-                    if (isNotAllowedWaitListSubscription(item.getMainKey(), (int) item.getSubKey())) {
+                    if (item.getPricePerOne() < MIN_PRICE_FOR_WAIT_LIST) {
                         continue;
                     }
                     boolean subscribed = isAlreadySubscribedWaitList(item.getMainKey(), (int) item.getSubKey(), chatId);
