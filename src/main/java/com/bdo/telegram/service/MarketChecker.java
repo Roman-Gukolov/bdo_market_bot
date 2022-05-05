@@ -84,10 +84,10 @@ public class MarketChecker {
         }
     }
 
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(fixedRate = 1200000)
     public void filterOutdatedItems() {
         notifiedItems = notifiedItems.stream()
-                .filter(item -> new Date(item.getTime() * 1000).after(DateUtils.addMinutes(new Date(), 1)))
+                .filter(item -> new Date(item.getTime() * 1000).after(new Date()))
                 .collect(Collectors.toSet());
     }
 
